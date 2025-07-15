@@ -111,7 +111,16 @@ export const AuthPage = () => {
     const { error } = await signUp(email, password, name);
     if (error) {
       let msg = error.message || "Erreur d'inscription";
-      if (msg.toLowerCase().includes("user already registered") || msg.toLowerCase().includes("email") || msg.toLowerCase().includes("unique")) {
+      const lowerMsg = msg.toLowerCase();
+      if (
+        lowerMsg.includes("user already registered") ||
+        lowerMsg.includes("email") ||
+        lowerMsg.includes("unique") ||
+        lowerMsg.includes("already") ||
+        lowerMsg.includes("exists") ||
+        lowerMsg.includes("duplicate") ||
+        lowerMsg.includes("constraint")
+      ) {
         msg = "Cet email est déjà utilisé. Veuillez en choisir un autre ou vous connecter.";
       }
       setServerError(msg);
@@ -295,11 +304,6 @@ export const AuthPage = () => {
               )}
             </TabsContent>
           </Tabs>
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p>Compte de test :</p>
-            <p>Email: admin@stockflow.com</p>
-            <p>Mot de passe: StockFlow2024!</p>
-          </div>
         </CardContent>
       </Card>
     </div>
