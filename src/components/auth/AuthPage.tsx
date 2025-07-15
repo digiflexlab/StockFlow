@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,18 +8,30 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { useRef } from 'react';
 
 export const AuthPage = () => {
   const { signIn, signUp, loading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
-  // Validation simple côté client
+  // Validation renforcée du mot de passe
+  const validatePasswordStrength = (password: string) => {
+    const errors = [];
+    if (password.length < 8) errors.push('8 caractères minimum');
+    if (!/[A-Z]/.test(password)) errors.push('1 majuscule');
+    if (!/[a-z]/.test(password)) errors.push('1 minuscule');
+    if (!/[0-9]/.test(password)) errors.push('1 chiffre');
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) errors.push('1 caractère spécial');
+    return errors;
+  };
+
   const validateSignIn = (email: string, password: string) => {
     const newErrors: { [key: string]: string } = {};
     if (!email) newErrors.email = 'Email requis';
@@ -33,7 +46,10 @@ export const AuthPage = () => {
     if (!email) newErrors.email = 'Email requis';
     else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) newErrors.email = 'Format d\'email invalide';
     if (!password) newErrors.password = 'Mot de passe requis';
-    else if (password.length < 6) newErrors.password = '6 caractères minimum';
+    else {
+      const pwErrors = validatePasswordStrength(password);
+      if (pwErrors.length > 0) newErrors.password = 'Mot de passe trop faible : ' + pwErrors.join(', ');
+    }
     return newErrors;
   };
 
@@ -69,6 +85,7 @@ export const AuthPage = () => {
       return;
     }
     setIsSubmitting(false);
+    navigate('/dashboard');
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -76,6 +93,7 @@ export const AuthPage = () => {
     setIsSubmitting(true);
     setErrors({});
     setServerError(null);
+    setSignUpSuccess(false);
 
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
@@ -92,12 +110,17 @@ export const AuthPage = () => {
 
     const { error } = await signUp(email, password, name);
     if (error) {
-      setServerError(error.message || "Erreur d'inscription");
+      let msg = error.message || "Erreur d'inscription";
+      if (msg.toLowerCase().includes("user already registered") || msg.toLowerCase().includes("email") || msg.toLowerCase().includes("unique")) {
+        msg = "Cet email est déjà utilisé. Veuillez en choisir un autre ou vous connecter.";
+      }
+      setServerError(msg);
       setIsSubmitting(false);
       if (emailRef.current) emailRef.current.focus();
       return;
     }
     setIsSubmitting(false);
+    setSignUpSuccess(true);
   };
 
   if (loading) {
@@ -123,7 +146,6 @@ export const AuthPage = () => {
               <TabsTrigger value="signin">Connexion</TabsTrigger>
               <TabsTrigger value="signup">Inscription</TabsTrigger>
             </TabsList>
-            
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4" noValidate>
                 {serverError && (
@@ -150,20 +172,33 @@ export const AuthPage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Mot de passe</Label>
-                  <Input
-                    id="signin-password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    required
-                    disabled={isSubmitting}
-                    ref={passwordRef}
-                    aria-invalid={!!errors.password}
-                    aria-describedby={errors.password ? 'signin-password-error' : undefined}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signin-password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      required
+                      disabled={isSubmitting}
+                      ref={passwordRef}
+                      aria-invalid={!!errors.password}
+                      aria-describedby={errors.password ? 'signin-password-error' : undefined}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500"
+                      tabIndex={-1}
+                      onClick={() => setShowPassword((v) => !v)}
+                    >
+                      {showPassword ? 'Masquer' : 'Afficher'}
+                    </button>
+                  </div>
                   {errors.password && (
                     <div id="signin-password-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.password}</div>
                   )}
+                  <div className="text-right mt-1">
+                    <a href="#" className="text-xs text-blue-600 hover:underline">Mot de passe oublié ?</a>
+                  </div>
                 </div>
                 <Button
                   type="submit"
@@ -174,8 +209,13 @@ export const AuthPage = () => {
                 </Button>
               </form>
             </TabsContent>
-            
             <TabsContent value="signup">
+              {signUpSuccess ? (
+                <div className="text-green-700 text-center font-semibold py-6">
+                  Inscription réussie !<br />
+                  Vérifiez votre email pour valider votre compte.
+                </div>
+              ) : (
               <form onSubmit={handleSignUp} className="space-y-4" noValidate>
                 {serverError && (
                   <div role="alert" aria-live="assertive" className="text-red-600 text-sm mb-2">
@@ -218,18 +258,28 @@ export const AuthPage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Mot de passe</Label>
-                  <Input
-                    id="signup-password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    required
-                    minLength={6}
-                    disabled={isSubmitting}
-                    ref={passwordRef}
-                    aria-invalid={!!errors.password}
-                    aria-describedby={errors.password ? 'signup-password-error' : undefined}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      required
+                      minLength={8}
+                      disabled={isSubmitting}
+                      ref={passwordRef}
+                      aria-invalid={!!errors.password}
+                      aria-describedby={errors.password ? 'signup-password-error' : undefined}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500"
+                      tabIndex={-1}
+                      onClick={() => setShowPassword((v) => !v)}
+                    >
+                      {showPassword ? 'Masquer' : 'Afficher'}
+                    </button>
+                  </div>
                   {errors.password && (
                     <div id="signup-password-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.password}</div>
                   )}
@@ -242,9 +292,9 @@ export const AuthPage = () => {
                   {isSubmitting ? 'Inscription...' : 'S\'inscrire'}
                 </Button>
               </form>
+              )}
             </TabsContent>
           </Tabs>
-          
           <div className="mt-6 text-center text-sm text-gray-600">
             <p>Compte de test :</p>
             <p>Email: admin@stockflow.com</p>
