@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const AuthPage = () => {
   const { signIn, signUp, loading } = useAuth();
@@ -20,6 +21,10 @@ export const AuthPage = () => {
   const passwordRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [tab, setTab] = useState('signin');
 
   // Validation renforcée du mot de passe
   const validatePasswordStrength = (password: string) => {
@@ -132,6 +137,24 @@ export const AuthPage = () => {
     setSignUpSuccess(true);
   };
 
+  const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setResetError(null);
+    setResetSuccess(false);
+    if (!resetEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(resetEmail)) {
+      setResetError('Veuillez saisir un email valide.');
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: window.location.origin + '/reset-password',
+    });
+    if (error) {
+      setResetError(error.message || 'Erreur lors de la demande de réinitialisation.');
+    } else {
+      setResetSuccess(true);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -150,10 +173,11 @@ export const AuthPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="signin">Connexion</TabsTrigger>
               <TabsTrigger value="signup">Inscription</TabsTrigger>
+              <TabsTrigger value="reset">Mot de passe oublié</TabsTrigger>
             </TabsList>
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4" noValidate>
@@ -205,9 +229,6 @@ export const AuthPage = () => {
                   {errors.password && (
                     <div id="signin-password-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.password}</div>
                   )}
-                  <div className="text-right mt-1">
-                    <a href="#" className="text-xs text-blue-600 hover:underline">Mot de passe oublié ?</a>
-                  </div>
                 </div>
                 <Button
                   type="submit"
@@ -302,6 +323,44 @@ export const AuthPage = () => {
                 </Button>
               </form>
               )}
+            </TabsContent>
+            <TabsContent value="reset">
+              <form onSubmit={handleResetPassword} className="space-y-4" noValidate>
+                {resetSuccess ? (
+                  <div className="text-green-700 text-center font-semibold py-6">
+                    Un email de réinitialisation a été envoyé.<br />
+                    Vérifiez votre boîte de réception.
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email">Email</Label>
+                      <Input
+                        id="reset-email"
+                        name="reset-email"
+                        type="email"
+                        placeholder="votre@email.com"
+                        value={resetEmail}
+                        onChange={e => setResetEmail(e.target.value)}
+                        required
+                        disabled={isSubmitting}
+                        aria-invalid={!!resetError}
+                        aria-describedby={resetError ? 'reset-email-error' : undefined}
+                      />
+                      {resetError && (
+                        <div id="reset-email-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{resetError}</div>
+                      )}
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      disabled={isSubmitting}
+                    >
+                      Envoyer le lien de réinitialisation
+                    </Button>
+                  </>
+                )}
+              </form>
             </TabsContent>
           </Tabs>
         </CardContent>
