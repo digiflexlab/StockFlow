@@ -29,7 +29,7 @@ import { useStores } from '@/hooks/useStores';
 import { formatPrice, formatDate } from '@/utils/formatters';
 import { isExpired, isExpiringSoon } from '@/utils/helpers';
 import { Product } from '@/types/product';
-import { MainLayout } from '@/components/MainLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 export const Products = () => {
   const { products, isLoading, error } = useProducts();
