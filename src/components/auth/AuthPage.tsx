@@ -25,6 +25,7 @@ export const AuthPage = () => {
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
   const [tab, setTab] = useState('signin');
+  const [showReset, setShowReset] = useState(false);
 
   // Validation renforcée du mot de passe
   const validatePasswordStrength = (password: string) => {
@@ -174,71 +175,122 @@ export const AuthPage = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Connexion</TabsTrigger>
               <TabsTrigger value="signup">Inscription</TabsTrigger>
-              <TabsTrigger value="reset">Mot de passe oublié</TabsTrigger>
             </TabsList>
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4" noValidate>
-                {serverError && (
-                  <div role="alert" aria-live="assertive" className="text-red-600 text-sm mb-2">
-                    {serverError}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    name="email"
-                    type="email"
-                    placeholder="votre@email.com"
-                    required
-                    disabled={isSubmitting}
-                    ref={emailRef}
-                    aria-invalid={!!errors.email}
-                    aria-describedby={errors.email ? 'signin-email-error' : undefined}
-                  />
-                  {errors.email && (
-                    <div id="signin-email-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.email}</div>
+            {!showReset && (
+              <TabsContent value="signin">
+                <form onSubmit={handleSignIn} className="space-y-4" noValidate>
+                  {serverError && (
+                    <div role="alert" aria-live="assertive" className="text-red-600 text-sm mb-2">
+                      {serverError}
+                    </div>
                   )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Mot de passe</Label>
-                  <div className="relative">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-email">Email</Label>
                     <Input
-                      id="signin-password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
+                      id="signin-email"
+                      name="email"
+                      type="email"
+                      placeholder="votre@email.com"
                       required
                       disabled={isSubmitting}
-                      ref={passwordRef}
-                      aria-invalid={!!errors.password}
-                      aria-describedby={errors.password ? 'signin-password-error' : undefined}
+                      ref={emailRef}
+                      aria-invalid={!!errors.email}
+                      aria-describedby={errors.email ? 'signin-email-error' : undefined}
                     />
-                    <button
-                      type="button"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500"
-                      tabIndex={-1}
-                      onClick={() => setShowPassword((v) => !v)}
-                    >
-                      {showPassword ? 'Masquer' : 'Afficher'}
-                    </button>
+                    {errors.email && (
+                      <div id="signin-email-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.email}</div>
+                    )}
                   </div>
-                  {errors.password && (
-                    <div id="signin-password-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.password}</div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-password">Mot de passe</Label>
+                    <div className="relative">
+                      <Input
+                        id="signin-password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        required
+                        disabled={isSubmitting}
+                        ref={passwordRef}
+                        aria-invalid={!!errors.password}
+                        aria-describedby={errors.password ? 'signin-password-error' : undefined}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500"
+                        tabIndex={-1}
+                        onClick={() => setShowPassword((v) => !v)}
+                      >
+                        {showPassword ? 'Masquer' : 'Afficher'}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <div id="signin-password-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.password}</div>
+                    )}
+                    <div className="text-right mt-1">
+                      <button type="button" className="text-xs text-blue-600 hover:underline" onClick={() => setShowReset(true)}>
+                        Mot de passe oublié ?
+                      </button>
+                    </div>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Connexion...' : 'Se connecter'}
+                  </Button>
+                </form>
+              </TabsContent>
+            )}
+            {showReset && (
+              <TabsContent value="signin">
+                <form onSubmit={handleResetPassword} className="space-y-4" noValidate>
+                  {resetSuccess ? (
+                    <div className="text-green-700 text-center font-semibold py-6">
+                      Un email de réinitialisation a été envoyé.<br />
+                      Vérifiez votre boîte de réception.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-email">Email</Label>
+                        <Input
+                          id="reset-email"
+                          name="reset-email"
+                          type="email"
+                          placeholder="votre@email.com"
+                          value={resetEmail}
+                          onChange={e => setResetEmail(e.target.value)}
+                          required
+                          disabled={isSubmitting}
+                          aria-invalid={!!resetError}
+                          aria-describedby={resetError ? 'reset-email-error' : undefined}
+                        />
+                        {resetError && (
+                          <div id="reset-email-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{resetError}</div>
+                        )}
+                      </div>
+                      <Button
+                        type="submit"
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                        disabled={isSubmitting}
+                      >
+                        Envoyer le lien de réinitialisation
+                      </Button>
+                      <div className="text-center mt-2">
+                        <button type="button" className="text-xs text-gray-600 hover:underline" onClick={() => setShowReset(false)}>
+                          Retour à la connexion
+                        </button>
+                      </div>
+                    </>
                   )}
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Connexion...' : 'Se connecter'}
-                </Button>
-              </form>
-            </TabsContent>
+                </form>
+              </TabsContent>
+            )}
             <TabsContent value="signup">
               {signUpSuccess ? (
                 <div className="text-green-700 text-center font-semibold py-6">
@@ -323,44 +375,6 @@ export const AuthPage = () => {
                 </Button>
               </form>
               )}
-            </TabsContent>
-            <TabsContent value="reset">
-              <form onSubmit={handleResetPassword} className="space-y-4" noValidate>
-                {resetSuccess ? (
-                  <div className="text-green-700 text-center font-semibold py-6">
-                    Un email de réinitialisation a été envoyé.<br />
-                    Vérifiez votre boîte de réception.
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="reset-email">Email</Label>
-                      <Input
-                        id="reset-email"
-                        name="reset-email"
-                        type="email"
-                        placeholder="votre@email.com"
-                        value={resetEmail}
-                        onChange={e => setResetEmail(e.target.value)}
-                        required
-                        disabled={isSubmitting}
-                        aria-invalid={!!resetError}
-                        aria-describedby={resetError ? 'reset-email-error' : undefined}
-                      />
-                      {resetError && (
-                        <div id="reset-email-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{resetError}</div>
-                      )}
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                      disabled={isSubmitting}
-                    >
-                      Envoyer le lien de réinitialisation
-                    </Button>
-                  </>
-                )}
-              </form>
             </TabsContent>
           </Tabs>
         </CardContent>
