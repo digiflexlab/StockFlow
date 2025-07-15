@@ -9,6 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Confirmation from "@/pages/Confirmation";
+import ResetPassword from "@/pages/ResetPassword";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/confirmation" element={<Confirmation />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
