@@ -289,8 +289,8 @@ export const UserModalEnhanced = ({
   // Vérifier si l'utilisateur actuel peut modifier cet utilisateur
   const canModifyUser = useMemo(() => {
     if (!profile) return false;
-    if (profile.role === 'admin') return true;
-    if (profile.role === 'manager' && data.role !== 'admin') return true;
+    if (profile?.role === 'admin') return true;
+    if (profile?.role === 'manager' && data.role !== 'admin') return true;
     return false;
   }, [profile, data.role]);
 
