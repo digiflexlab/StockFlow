@@ -15,7 +15,7 @@ import { toast } from '@/hooks/use-toast';
 
 export const TopBar = ({ user, onLogout }) => {
   const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('');
+    return (name ?? '').split(' ').map(n => n[0]).join('');
   };
 
   const getRoleLabel = (role) => {
