@@ -18,31 +18,30 @@ export const StatusBadge = ({
 }: StatusBadgeProps) => {
   const getBadgeContent = () => {
     switch (type) {
-      case 'sale':
+      case 'sale': {
         const saleStatus = getSaleStatusBadge(value as string);
         return {
           label: saleStatus.label,
           color: saleStatus.color
         };
-        
-      case 'stock':
+      }
+      case 'stock': {
         const stockStatus = getStockStatus(value as number, minThreshold);
         return {
           label: stockStatus.label,
           color: stockStatus.color
         };
-        
-      case 'role':
+      }
+      case 'role': {
         return {
           label: value as string,
           color: getRoleBadgeColor(value as string)
         };
-        
-      case 'expiration':
+      }
+      case 'expiration': {
         if (!expirationDate) {
           return { label: 'N/A', color: 'bg-gray-100 text-gray-800' };
         }
-        
         const isExpired = new Date(expirationDate) < new Date();
         const isExpiringSoon = (() => {
           const today = new Date();
@@ -50,7 +49,6 @@ export const StatusBadge = ({
           const diffDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
           return diffDays <= 30 && diffDays > 0;
         })();
-        
         if (isExpired) {
           return { label: 'Expiré', color: 'bg-red-100 text-red-800' };
         } else if (isExpiringSoon) {
@@ -58,9 +56,10 @@ export const StatusBadge = ({
         } else {
           return { label: 'OK', color: 'bg-green-100 text-green-800' };
         }
-        
-      default:
+      }
+      default: {
         return { label: value as string, color: 'bg-gray-100 text-gray-800' };
+      }
     }
   };
 
