@@ -97,7 +97,7 @@ export const Dashboard = ({ user, onPageChange }) => {
     }
 
     // Filtrer les actions selon le rôle de l'utilisateur
-    return actions.filter(action => action.roles.includes(user.role));
+    return actions.filter(action => action.roles.includes(user?.role));
   };
 
   // Construire les requêtes avec filtrage selon le rôle
@@ -123,11 +123,11 @@ export const Dashboard = ({ user, onPageChange }) => {
           .order('quantity');
 
     // Filtrer selon le rôle et les magasins assignés
-    if (user.role === 'seller' && user.store_ids?.length > 0) {
+    if (user?.role === 'seller' && user.store_ids?.length > 0) {
       salesQuery = salesQuery.in('store_id', user.store_ids);
       allSalesQuery = allSalesQuery.in('store_id', user.store_ids);
       stockQuery = stockQuery.in('store_id', user.store_ids);
-    } else if (user.role === 'manager' && user.store_ids?.length > 0) {
+    } else if (user?.role === 'manager' && user.store_ids?.length > 0) {
       salesQuery = salesQuery.in('store_id', user.store_ids);
       allSalesQuery = allSalesQuery.in('store_id', user.store_ids);
       stockQuery = stockQuery.in('store_id', user.store_ids);
@@ -152,9 +152,9 @@ export const Dashboard = ({ user, onPageChange }) => {
         .eq('status', 'completed');
 
       // Appliquer le même filtrage selon le rôle
-      if (user.role === 'seller' && user.store_ids?.length > 0) {
+      if (user?.role === 'seller' && user.store_ids?.length > 0) {
         yesterdayQuery = yesterdayQuery.in('store_id', user.store_ids);
-      } else if (user.role === 'manager' && user.store_ids?.length > 0) {
+      } else if (user?.role === 'manager' && user.store_ids?.length > 0) {
         yesterdayQuery = yesterdayQuery.in('store_id', user.store_ids);
       }
 
@@ -174,7 +174,7 @@ export const Dashboard = ({ user, onPageChange }) => {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      if (user.role === 'admin') {
+      if (user?.role === 'admin') {
         // Pour l'admin, compter les utilisateurs créés aujourd'hui (à défaut de last_sign_in_at)
         const { data: activeUsers } = await supabase
           .from('profiles')
@@ -193,9 +193,9 @@ export const Dashboard = ({ user, onPageChange }) => {
 
   // Filtrer les magasins selon les permissions
   const getFilteredStores = () => {
-    if (user.role === 'admin') {
+    if (user?.role === 'admin') {
       return stores;
-    } else if (user.store_ids?.length > 0) {
+    } else if (user?.store_ids?.length > 0) {
       return stores.filter(store => user.store_ids.includes(store.id));
     }
     return [];
@@ -203,9 +203,9 @@ export const Dashboard = ({ user, onPageChange }) => {
 
   // Filtrer les produits selon les permissions
   const getFilteredProducts = () => {
-    if (user.role === 'admin') {
+    if (user?.role === 'admin') {
       return products;
-    } else if (user.store_ids?.length > 0) {
+    } else if (user?.store_ids?.length > 0) {
       // Pour les managers et sellers, on retourne tous les produits
       // mais les alertes de stock seront filtrées par magasin
       return products;
@@ -268,8 +268,8 @@ export const Dashboard = ({ user, onPageChange }) => {
           products: accessibleProducts,
           stores: accessibleStores.map(store => ({ id: store.id.toString(), name: store.name })),
           stockData: stockData,
-          userRole: user.role,
-          userStoreIds: user.store_ids || []
+          userRole: user?.role,
+          userStoreIds: user?.store_ids || []
         };
         
         setDashboardData(data);
@@ -299,8 +299,8 @@ export const Dashboard = ({ user, onPageChange }) => {
           products: accessibleProducts,
           stores: accessibleStores.map(store => ({ id: store.id.toString(), name: store.name })),
           stockData: [],
-          userRole: user.role,
-          userStoreIds: user.store_ids || [],
+          userRole: user?.role,
+          userStoreIds: user?.store_ids || [],
           error: true // Flag pour afficher un état d'erreur
         });
       } finally {
@@ -323,14 +323,14 @@ export const Dashboard = ({ user, onPageChange }) => {
       seller: 'Vendeur'
     };
     
-    return `Bonjour ${user.name.split(' ')[0]} ! 👋 (${roleLabels[user.role]})`;
+    return `Bonjour ${user?.name ? user.name.split(' ')[0] : ''} ! 👋 (${roleLabels[user?.role]})`;
   };
 
   // Obtenir la description selon le rôle
   const getDescription = () => {
-    if (user.role === 'admin') {
+    if (user?.role === 'admin') {
       return "Vue d'ensemble complète de votre système";
-    } else if (user.role === 'manager') {
+    } else if (user?.role === 'manager') {
       return `Aperçu de vos ${dashboardData?.totalStores || 0} magasin(s) assigné(s)`;
     } else {
       return "Aperçu de votre activité aujourd'hui";
@@ -455,7 +455,7 @@ export const Dashboard = ({ user, onPageChange }) => {
                 <div className="flex items-center mt-2">
                   <DollarSign className="h-4 w-4 mr-1" />
                   <span className="text-sm">
-                    {user.role === 'admin' ? 'Toutes périodes' : 'Vos magasins'}
+                    {user?.role === 'admin' ? 'Toutes périodes' : 'Vos magasins'}
                   </span>
                 </div>
               </div>
@@ -469,7 +469,7 @@ export const Dashboard = ({ user, onPageChange }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm">
-                  {user.role === 'admin' ? 'Total produits' : 'Produits accessibles'}
+                  {user?.role === 'admin' ? 'Total produits' : 'Produits accessibles'}
                 </p>
                 <p className="text-2xl font-bold text-gray-900">{dashboardData.totalProducts}</p>
               </div>
@@ -483,7 +483,7 @@ export const Dashboard = ({ user, onPageChange }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm">
-                  {user.role === 'admin' ? 'Stock faible' : 'Alertes stock'}
+                  {user?.role === 'admin' ? 'Stock faible' : 'Alertes stock'}
                 </p>
                 <p className="text-2xl font-bold text-orange-600">{dashboardData.lowStockProducts}</p>
               </div>
@@ -501,14 +501,14 @@ export const Dashboard = ({ user, onPageChange }) => {
             <CardTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5 text-green-600" />
               Ventes récentes
-              {user.role !== 'admin' && (
+              {user?.role !== 'admin' && (
                 <span className="text-sm text-gray-500">
                   ({dashboardData.stores.length} magasin{dashboardData.stores.length > 1 ? 's' : ''})
                 </span>
               )}
             </CardTitle>
             <CardDescription>
-              {user.role === 'admin' ? 'Dernières transactions' : 'Vos dernières transactions'}
+              {user?.role === 'admin' ? 'Dernières transactions' : 'Vos dernières transactions'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -548,14 +548,14 @@ export const Dashboard = ({ user, onPageChange }) => {
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-600" />
               Alertes de stock
-              {user.role !== 'admin' && (
+              {user?.role !== 'admin' && (
                 <span className="text-sm text-gray-500">
                   ({dashboardData.stores.length} magasin{dashboardData.stores.length > 1 ? 's' : ''})
                 </span>
               )}
             </CardTitle>
             <CardDescription>
-              {user.role === 'admin' 
+              {user?.role === 'admin' 
                 ? 'Produits nécessitant un réapprovisionnement' 
                 : 'Produits nécessitant un réapprovisionnement dans vos magasins'
               }
