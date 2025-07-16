@@ -319,7 +319,7 @@ export const Users = ({ user }) => {
   };
 
   const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    return (name ?? '').split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
   const getUserStores = (storeIds) => {
