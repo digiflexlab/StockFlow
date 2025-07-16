@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/hooks/useAuth';
+import { usePendingValidation } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
 export const UserProfileGamified = () => {
@@ -48,6 +49,19 @@ export const UserProfileGamified = () => {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showNotifications, setShowNotifications] = useState(false);
+  const isPending = usePendingValidation(profile);
+
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-pulse rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
+          <p className="mt-4 text-yellow-700 font-semibold">Votre inscription est en attente de validation par un administrateur.</p>
+          <p className="text-gray-500 mt-2">Vous recevrez un email dès que votre compte sera activé.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (userLoading) {
     return (
