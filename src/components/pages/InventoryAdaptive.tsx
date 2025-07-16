@@ -1,558 +1,648 @@
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useMemo } from 'react';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Search, 
-  Plus, 
-  Package,
+  User, 
+  Shield, 
+  Building2, 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff,
   CheckCircle,
-  AlertCircle,
-  Edit,
-  Save,
-  RotateCcw,
-  Download,
-  BarChart3,
+  AlertTriangle,
   Users,
-  TrendingUp,
-  Calendar,
-  Loader2,
-  Eye,
-  Shield,
-  ClipboardList,
-  Target,
-  Clock,
-  FileText
+  Settings,
+  Key,
+  Activity,
+  Clock
 } from 'lucide-react';
-import { ErrorState } from '@/components/common/ErrorState';
-import { EmptyState } from '@/components/common/EmptyState';
-import { useInventoryOptimized } from '@/hooks/useInventoryOptimized';
+import { useFormValidation } from '@/hooks/useFormValidation';
 import { useStores } from '@/hooks/useStores';
+import { useAuth } from '@/hooks/useAuth';
+import { LoadingButton } from '@/components/common/LoadingButton';
+import { toast } from '@/hooks/use-toast';
 
-export const InventoryAdaptive = () => {
+interface UserModalEnhancedProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (userData: any) => void;
+  user?: any;
+  stores?: any[];
+}
+
+interface UserData {
+  name: string;
+  email: string;
+  password: string;
+  role: 'admin' | 'manager' | 'seller';
+  storeIds: number[];
+  permissions: string[];
+  isActive: boolean;
+  phone?: string;
+  department?: string;
+  notes?: string;
+}
+
+// Schéma de validation amélioré
+const userValidationSchema = {
+  name: { 
+    required: true, 
+    minLength: 2, 
+    maxLength: 100,
+    custom: (value: string) => {
+      if (!value.trim()) return 'Le nom est requis';
+      if (value.length < 2) return 'Le nom doit contenir au moins 2 caractères';
+      if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(value)) return 'Le nom ne peut contenir que des lettres';
+      return null;
+    }
+  },
+  email: { 
+    required: true, 
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    custom: (value: string) => {
+      if (!value) return 'L\'email est requis';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Format d\'email invalide';
+      return null;
+    }
+  },
+  password: { 
+    required: true, 
+    minLength: 8,
+    custom: (value: string) => {
+      if (!value) return 'Le mot de passe est requis';
+      if (value.length < 8) return 'Le mot de passe doit contenir au moins 8 caractères';
+      if (!/(?=.*[a-z])/.test(value)) return 'Le mot de passe doit contenir au moins une minuscule';
+      if (!/(?=.*[A-Z])/.test(value)) return 'Le mot de passe doit contenir au moins une majuscule';
+      if (!/(?=.*\d)/.test(value)) return 'Le mot de passe doit contenir au moins un chiffre';
+      if (!/(?=.*[@$!%*?&])/.test(value)) return 'Le mot de passe doit contenir au moins un caractère spécial';
+      return null;
+    }
+  },
+  role: { 
+    required: true,
+    custom: (value: string) => {
+      if (!value) return 'Le rôle est requis';
+      if (!['admin', 'manager', 'seller'].includes(value)) return 'Rôle invalide';
+      return null;
+    }
+  },
+  storeIds: { 
+    required: true,
+    custom: (value: number[]) => {
+      if (!value || value.length === 0) return 'Sélectionnez au moins un magasin';
+      return null;
+    }
+  }
+};
+
+// Permissions par rôle
+const ROLE_PERMISSIONS = {
+  admin: [
+    'users:view', 'users:create', 'users:edit', 'users:delete',
+    'products:view', 'products:create', 'products:edit', 'products:delete',
+    'sales:view', 'sales:create', 'sales:edit', 'sales:delete',
+    'stores:view', 'stores:create', 'stores:edit', 'stores:delete',
+    'suppliers:view', 'suppliers:create', 'suppliers:edit', 'suppliers:delete',
+    'reports:view', 'reports:export', 'reports:delete',
+    'settings:view', 'settings:edit',
+    'finance:view', 'finance:edit', 'finance:delete'
+  ],
+  manager: [
+    'users:view', 'users:create', 'users:edit',
+    'products:view', 'products:create', 'products:edit',
+    'sales:view', 'sales:create', 'sales:edit',
+    'stores:view', 'stores:edit',
+    'suppliers:view', 'suppliers:create', 'suppliers:edit',
+    'reports:view', 'reports:export',
+    'settings:view',
+    'finance:view', 'finance:edit'
+  ],
+  seller: [
+    'products:view',
+    'sales:view', 'sales:create',
+    'stores:view',
+    'reports:view'
+  ]
+};
+
+// Catégories de permissions
+const PERMISSION_CATEGORIES = {
+  'Gestion des utilisateurs': ['users:view', 'users:create', 'users:edit', 'users:delete'],
+  'Gestion des produits': ['products:view', 'products:create', 'products:edit', 'products:delete'],
+  'Gestion des ventes': ['sales:view', 'sales:create', 'sales:edit', 'sales:delete'],
+  'Gestion des magasins': ['stores:view', 'stores:create', 'stores:edit', 'stores:delete'],
+  'Gestion des fournisseurs': ['suppliers:view', 'suppliers:create', 'suppliers:edit', 'suppliers:delete'],
+  'Rapports et analytics': ['reports:view', 'reports:export', 'reports:delete'],
+  'Configuration': ['settings:view', 'settings:edit'],
+  'Finance': ['finance:view', 'finance:edit', 'finance:delete']
+};
+
+export const UserModalEnhanced = ({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  user, 
+  stores = [] 
+}: UserModalEnhancedProps) => {
+  const { profile } = useAuth();
+  const { stores: allStores } = useStores();
+  const [showPassword, setShowPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
+
+  const initialUserData: UserData = {
+    name: '',
+    email: '',
+    password: '',
+    role: 'seller',
+    storeIds: [],
+    permissions: [],
+    isActive: true,
+    phone: '',
+    department: '',
+    notes: ''
+  };
+
   const {
-    inventorySessions,
-    activeSession,
-    metrics,
-    isLoading,
-    error,
-    canViewInventory,
-    canCreateInventory,
-    canEditInventory,
-    canCompleteInventory,
-    canAdjustStock,
-    canViewMetrics,
-    canViewAllStores,
-    canViewAudit,
-    userRole,
-    messages,
-    createInventorySession,
-    updateCount,
-    adjustStock,
-    completeInventory,
-    isCreating,
-    isUpdating,
-    isAdjusting,
-    isCompleting,
-    exportInventoryReport
-  } = useInventoryOptimized();
+    data,
+    errors,
+    isSubmitting,
+    isDirty,
+    isValid,
+    updateField,
+    handleSubmit,
+    resetForm
+  } = useFormValidation({
+    initialData: initialUserData,
+    validationSchema: userValidationSchema,
+    onSubmit: async (userData) => {
+      try {
+        await onSave(userData);
+        toast({
+          title: user ? "Utilisateur modifié" : "Utilisateur créé",
+          description: "L'utilisateur a été enregistré avec succès.",
+        });
+        onClose();
+      } catch (error) {
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de l'enregistrement.",
+          variant: "destructive",
+        });
+      }
+    }
+  });
 
-  const { stores } = useStores();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStore, setSelectedStore] = useState('all');
-  const [editingItem, setEditingItem] = useState(null);
-  const [viewMode, setViewMode] = useState<'session' | 'history'>('session');
+  // Charger les données de l'utilisateur à éditer
+  useEffect(() => {
+    if (user && isOpen) {
+      Object.keys(initialUserData).forEach(key => {
+        const value = user[key as keyof UserData];
+        if (value !== undefined) {
+          updateField(key, value);
+        }
+      });
+    } else if (!user && isOpen) {
+      resetForm();
+    }
+  }, [user, isOpen, updateField, resetForm]);
 
-  // Filtrage intelligent selon le rôle
-  const filteredItems = useMemo(() => {
-    if (!activeSession?.inventory_items) return [];
+  // Permissions disponibles selon le rôle
+  const availablePermissions = useMemo(() => {
+    return ROLE_PERMISSIONS[data.role as keyof typeof ROLE_PERMISSIONS] || [];
+  }, [data.role]);
+
+  // Permissions sélectionnées par catégorie
+  const permissionsByCategory = useMemo(() => {
+    const result: Record<string, { permissions: string[], selected: string[] }> = {};
     
-    return activeSession.inventory_items.filter(item => {
-      const matchesSearch = item.products?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           item.products?.sku?.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesSearch;
+    Object.entries(PERMISSION_CATEGORIES ?? {}).forEach(([category, permissions]) => {
+      const availableInCategory = permissions.filter(p => availablePermissions.includes(p));
+      const selectedInCategory = data.permissions.filter(p => availableInCategory.includes(p));
+      
+      if (availableInCategory.length > 0) {
+        result[category] = {
+          permissions: availableInCategory,
+          selected: selectedInCategory
+        };
+      }
     });
-  }, [activeSession, searchTerm]);
-
-  // Actions contextuelles selon le rôle
-  const getQuickActions = () => {
-    const actions = [];
-
-    if (canCreateInventory && !activeSession) {
-      actions.push({
-        label: 'Démarrer inventaire',
-        icon: Plus,
-        action: () => handleStartNewInventory(),
-        variant: 'default' as const,
-        className: 'bg-blue-600 hover:bg-blue-700',
-        disabled: selectedStore === 'all'
-      });
-    }
-
-    if (canViewMetrics && activeSession) {
-      actions.push({
-        label: 'Exporter rapport',
-        icon: Download,
-        action: () => exportInventoryReport(activeSession.id, 'csv'),
-        variant: 'outline' as const
-      });
-    }
-
-    if (canViewAudit && activeSession) {
-      actions.push({
-        label: 'Exporter JSON',
-        icon: Download,
-        action: () => exportInventoryReport(activeSession.id, 'json'),
-        variant: 'outline' as const
-      });
-    }
-
-    return actions;
-  };
-
-  const handleStartNewInventory = async () => {
-    if (selectedStore === 'all') {
-      return;
-    }
-
-    const storeName = stores.find(s => s.id.toString() === selectedStore)?.name || '';
-    const sessionName = `Inventaire - ${storeName} - ${new Date().toLocaleDateString('fr-FR')}`;
     
-    await createInventorySession({
-      name: sessionName,
-      storeId: parseInt(selectedStore)
-    });
+    return result;
+  }, [data.permissions, availablePermissions]);
+
+  // Gestion des permissions
+  const handlePermissionChange = (permission: string, checked: boolean) => {
+    const newPermissions = checked 
+      ? [...data.permissions, permission]
+      : data.permissions.filter(p => p !== permission);
+    
+    updateField('permissions', newPermissions);
   };
 
-  const handleUpdateCount = async (itemId: number, count: number) => {
-    await updateCount({ itemId, count });
-    setEditingItem(null);
+  // Gestion des magasins
+  const handleStoreChange = (storeId: number, checked: boolean) => {
+    const newStoreIds = checked 
+      ? [...data.storeIds, storeId]
+      : data.storeIds.filter(id => id !== storeId);
+    
+    updateField('storeIds', newStoreIds);
   };
 
-  const handleAdjustStock = async (itemId: number) => {
-    await adjustStock({ itemId });
+  // Mise à jour automatique des permissions lors du changement de rôle
+  const handleRoleChange = (role: string) => {
+    updateField('role', role);
+    // Appliquer les permissions par défaut du rôle
+    const defaultPermissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS] || [];
+    updateField('permissions', defaultPermissions);
   };
 
-  const handleCompleteInventory = async () => {
-    if (activeSession) {
-      await completeInventory({ sessionId: activeSession.id });
-    }
-  };
+  // Validation du mot de passe en temps réel
+  const passwordStrength = useMemo(() => {
+    const password = data.password;
+    if (!password) return { score: 0, label: 'Vide', color: 'text-gray-400' };
+    
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/(?=.*[a-z])/.test(password)) score++;
+    if (/(?=.*[A-Z])/.test(password)) score++;
+    if (/(?=.*\d)/.test(password)) score++;
+    if (/(?=.*[@$!%*?&])/.test(password)) score++;
+    
+    const labels = ['Très faible', 'Faible', 'Moyen', 'Bon', 'Très bon'];
+    const colors = ['text-red-500', 'text-orange-500', 'text-yellow-500', 'text-blue-500', 'text-green-500'];
+    
+    return {
+      score,
+      label: labels[score - 1] || 'Vide',
+      color: colors[score - 1] || 'text-gray-400'
+    };
+  }, [data.password]);
 
-  // Gestion des erreurs avec messages adaptés
-  if (error) {
-    return (
-      <div className="p-6">
-        <ErrorState 
-          title="Erreur de chargement"
-          message={error.message || messages.errorMessage}
-          onRetry={() => window.location.reload()}
-        />
-      </div>
-    );
-  }
-
-  // État de chargement avec message adapté
-  if (isLoading) {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">{messages.loadingMessage}</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Vérification des permissions
-  if (!canViewInventory) {
-    return (
-      <div className="p-6">
-        <ErrorState 
-          title="Accès restreint"
-          message={messages.noAccessMessage}
-        />
-      </div>
-    );
-  }
-
-  const getStatusBadge = (item: any) => {
-    if (item.is_adjusted) {
-      return <Badge className="bg-green-100 text-green-800">Ajusté</Badge>;
-    } else if (item.counted_quantity !== null) {
-      return <Badge className="bg-blue-100 text-blue-800">Compté</Badge>;
-    } else {
-      return <Badge className="bg-yellow-100 text-yellow-800">En attente</Badge>;
-    }
-  };
-
-  const getDifferenceBadge = (difference: number) => {
-    if (difference === 0) return <Badge className="bg-green-100 text-green-800">Conforme</Badge>;
-    if (difference > 0) return <Badge className="bg-blue-100 text-blue-800">+{difference}</Badge>;
-    return <Badge className="bg-red-100 text-red-800">{difference}</Badge>;
-  };
+  // Vérifier si l'utilisateur actuel peut modifier cet utilisateur
+  const canModifyUser = useMemo(() => {
+    if (!profile) return false;
+    if (profile?.role === 'admin') return true;
+    if (profile?.role === 'manager' && data.role !== 'admin') return true;
+    return false;
+  }, [profile, data.role]);
 
   return (
-    <div className="p-6 space-y-6">
-      {/* En-tête adaptatif */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            {userRole === 'admin' ? 'Gestion des inventaires' :
-             userRole === 'manager' ? 'Inventaires de magasin' :
-             'Inventaires'}
-          </h2>
-          <p className="text-gray-600">
-            {activeSession 
-              ? `Session active: ${activeSession.name}`
-              : userRole === 'admin' ? `${inventorySessions.length} session(s) d'inventaire`
-              : userRole === 'manager' ? `${inventorySessions.length} inventaire(s) de votre magasin`
-              : `${inventorySessions.length} inventaire(s) disponible(s)`
-            }
-          </p>
-          {userRole === 'seller' && (
-            <p className="text-sm text-blue-600 mt-1">
-              Mode consultation - Contactez votre manager pour les modifications
-            </p>
-          )}
-        </div>
-
-        {/* Actions rapides selon le rôle */}
-        <div className="flex flex-wrap gap-2">
-          {getQuickActions().map((action, index) => (
-            <Button
-              key={index}
-              onClick={action.action}
-              variant={action.variant}
-              className={action.className}
-              disabled={action.disabled || isCreating || isUpdating}
-            >
-              <action.icon className="h-4 w-4 mr-2" />
-              {action.label}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Métriques pour admin/manager */}
-      {canViewMetrics && inventorySessions.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <ClipboardList className="h-5 w-5 text-blue-600 mr-2" />
-                <span className="text-lg font-bold text-blue-600">{metrics.totalSessions}</span>
-              </div>
-              <p className="text-xs text-gray-600">Sessions totales</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Clock className="h-5 w-5 text-orange-600 mr-2" />
-                <span className="text-lg font-bold text-orange-600">{metrics.activeSessions}</span>
-              </div>
-              <p className="text-xs text-gray-600">Sessions actives</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Target className="h-5 w-5 text-purple-600 mr-2" />
-                <span className="text-lg font-bold text-purple-600">{metrics.countedItems}</span>
-              </div>
-              <p className="text-xs text-gray-600">Articles comptés</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <TrendingUp className="h-5 w-5 text-green-600 mr-2" />
-                <span className="text-lg font-bold text-green-600">
-                  {metrics.averageAccuracy.toFixed(1)}%
-                </span>
-              </div>
-              <p className="text-xs text-gray-600">Précision moyenne</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Sélection de magasin pour création */}
-      {canCreateInventory && !activeSession && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4 items-center">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {userRole === 'admin' ? 'Sélectionner un magasin pour l\'inventaire' :
-                   userRole === 'manager' ? 'Votre magasin pour l\'inventaire' :
-                   'Magasin pour consultation'}
-                </label>
-                <select
-                  value={selectedStore}
-                  onChange={(e) => setSelectedStore(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white"
-                  disabled={!canCreateInventory}
-                >
-                  <option value="all">
-                    {userRole === 'admin' ? 'Sélectionner un magasin' :
-                     userRole === 'manager' ? 'Votre magasin' :
-                     'Sélectionner un magasin'}
-                  </option>
-                  {stores
-                    .filter(store => canViewAllStores || store.id.toString() === selectedStore)
-                    .map(store => (
-                      <option key={store.id} value={store.id.toString()}>{store.name}</option>
-                    ))}
-                </select>
-              </div>
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${isOpen ? 'block' : 'hidden'}`}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">
+                {user ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}
+              </h2>
+              <p className="text-gray-600">
+                {user ? 'Modifiez les informations de l\'utilisateur' : 'Créez un nouvel utilisateur'}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <Button variant="outline" onClick={onClose}>
+              ✕
+            </Button>
+          </div>
 
-      {/* Session d'inventaire active */}
-      {activeSession && (
-        <>
-          {/* Barre de recherche et actions */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-col md:flex-row gap-4 items-center">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder={
-                      userRole === 'admin' ? 'Rechercher par nom ou SKU...' :
-                      userRole === 'manager' ? 'Trouver un produit...' :
-                      'Rechercher un article...'
-                    }
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="basic">Informations</TabsTrigger>
+                <TabsTrigger value="permissions">Permissions</TabsTrigger>
+                <TabsTrigger value="stores">Magasins</TabsTrigger>
+                <TabsTrigger value="advanced">Avancé</TabsTrigger>
+              </TabsList>
+
+              {/* Onglet Informations de base */}
+              <TabsContent value="basic" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Nom complet *</Label>
+                    <Input
+                      id="name"
+                      value={data.name}
+                      onChange={(e) => updateField('name', e.target.value)}
+                      className={errors.name ? 'border-red-500' : ''}
+                      placeholder="Nom et prénom"
+                    />
+                    {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={data.email}
+                      onChange={(e) => updateField('email', e.target.value)}
+                      className={errors.email ? 'border-red-500' : ''}
+                      placeholder="email@exemple.com"
+                    />
+                    {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone">Téléphone</Label>
+                    <Input
+                      id="phone"
+                      value={data.phone}
+                      onChange={(e) => updateField('phone', e.target.value)}
+                      placeholder="+221 77 123 4567"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="department">Département</Label>
+                    <Input
+                      id="department"
+                      value={data.department}
+                      onChange={(e) => updateField('department', e.target.value)}
+                      placeholder="Ventes, Stock, etc."
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="role">Rôle *</Label>
+                    <Select value={data.role} onValueChange={handleRoleChange}>
+                      <SelectTrigger className={errors.role ? 'border-red-500' : ''}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="seller">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            Vendeur
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="manager">
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            Manager
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="admin">
+                          <div className="flex items-center gap-2">
+                            <Settings className="h-4 w-4" />
+                            Administrateur
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.role && <p className="text-sm text-red-500 mt-1">{errors.role}</p>}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="status">Statut</Label>
+                    <Select value={data.isActive ? 'active' : 'inactive'} onValueChange={(value) => updateField('isActive', value === 'active')}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            Actif
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="inactive">
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                            Inactif
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {!user && (
+                  <div>
+                    <Label htmlFor="password">Mot de passe *</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={data.password}
+                        onChange={(e) => updateField('password', e.target.value)}
+                        className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+                        placeholder="Mot de passe sécurisé"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
+                    
+                    {/* Indicateur de force du mot de passe */}
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Force :</span>
+                        <span className={`text-sm font-medium ${passwordStrength.color}`}>
+                          {passwordStrength.label}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                        <div 
+                          className={`h-2 rounded-full transition-all ${
+                            passwordStrength.score <= 1 ? 'bg-red-500' :
+                            passwordStrength.score <= 2 ? 'bg-orange-500' :
+                            passwordStrength.score <= 3 ? 'bg-yellow-500' :
+                            passwordStrength.score <= 4 ? 'bg-blue-500' : 'bg-green-500'
+                          }`}
+                          style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Onglet Permissions */}
+              <TabsContent value="permissions" className="space-y-4">
+                <Alert>
+                  <Shield className="h-4 w-4" />
+                  <AlertDescription>
+                    Les permissions sont automatiquement définies selon le rôle sélectionné. 
+                    Vous pouvez les ajuster manuellement si nécessaire.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="space-y-4">
+                  {Object.entries(permissionsByCategory ?? {}).map(([category, { permissions, selected }]) => (
+                    <Card key={category}>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{category}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {permissions.map(permission => {
+                            const isChecked = selected.includes(permission);
+                            const permissionLabel = permission.split(':')[1];
+                            
+                            return (
+                              <div key={permission} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={permission}
+                                  checked={isChecked}
+                                  onCheckedChange={(checked) => handlePermissionChange(permission, checked as boolean)}
+                                  disabled={!canModifyUser}
+                                />
+                                <Label htmlFor={permission} className="text-sm font-medium">
+                                  {permissionLabel.charAt(0).toUpperCase() + permissionLabel.slice(1)}
+                                </Label>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-blue-900">
+                      {data.permissions.length} permission(s) sélectionnée(s)
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      Rôle : {data.role.charAt(0).toUpperCase() + data.role.slice(1)}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-blue-700">
+                    {Math.round((data.permissions.length / availablePermissions.length) * 100)}% des permissions
+                  </Badge>
+                </div>
+              </TabsContent>
+
+              {/* Onglet Magasins */}
+              <TabsContent value="stores" className="space-y-4">
+                <Alert>
+                  <Building2 className="h-4 w-4" />
+                  <AlertDescription>
+                    Sélectionnez les magasins auxquels cet utilisateur aura accès.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {allStores.map(store => {
+                    const isSelected = data.storeIds.includes(store.id);
+                    
+                    return (
+                      <Card key={store.id} className={`cursor-pointer transition-all ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-3">
+                            <Checkbox
+                              id={`store-${store.id}`}
+                              checked={isSelected}
+                              onCheckedChange={(checked) => handleStoreChange(store.id, checked as boolean)}
+                              disabled={!canModifyUser}
+                            />
+                            <div className="flex-1">
+                              <Label htmlFor={`store-${store.id}`} className="font-medium cursor-pointer">
+                                {store.name}
+                              </Label>
+                              <p className="text-sm text-gray-600">{store.address}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {data.storeIds.length === 0 && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      Aucun magasin sélectionné. L'utilisateur ne pourra pas accéder au système.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </TabsContent>
+
+              {/* Onglet Avancé */}
+              <TabsContent value="advanced" className="space-y-4">
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <textarea
+                    id="notes"
+                    value={data.notes}
+                    onChange={(e) => updateField('notes', e.target.value)}
+                    className="w-full p-3 border rounded-lg resize-none"
+                    rows={4}
+                    placeholder="Notes supplémentaires sur l'utilisateur..."
                   />
                 </div>
-                
-                <div className="flex gap-2">
-                  {canViewMetrics && (
-                    <Button
-                      variant="outline"
-                      onClick={() => exportInventoryReport(activeSession.id, 'csv')}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Exporter
-                    </Button>
-                  )}
-                  
-                  <Button
-                    variant="outline"
-                    onClick={() => setViewMode(viewMode === 'session' ? 'history' : 'session')}
-                  >
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    {viewMode === 'session' ? 'Historique' : 'Session'}
-                  </Button>
-                  
-                  {canCompleteInventory && (
-                    <Button
-                      onClick={handleCompleteInventory}
-                      className="bg-green-600 hover:bg-green-700"
-                      disabled={isCompleting}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Terminer inventaire
-                    </Button>
-                  )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Informations de sécurité</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Dernière connexion</span>
+                        <span className="text-sm">Jamais</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Statut du compte</span>
+                        <Badge variant={data.isActive ? 'default' : 'destructive'}>
+                          {data.isActive ? 'Actif' : 'Inactif'}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Résumé des permissions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Permissions totales</span>
+                        <span className="text-sm font-medium">{data.permissions.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Magasins assignés</span>
+                        <span className="text-sm font-medium">{data.storeIds.length}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </TabsContent>
+            </Tabs>
 
-          {/* Liste des articles à compter */}
-          <div className="space-y-4">
-            {filteredItems.map((item) => (
-              <Card key={item.id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <Package className="h-8 w-8 text-gray-400" />
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{item.products?.name || 'Produit inconnu'}</h3>
-                          <p className="text-sm text-gray-600">{item.products?.sku || 'SKU inconnu'}</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4">
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600">Stock attendu</p>
-                        <p className="text-xl font-bold text-gray-900">{item.expected_quantity}</p>
-                      </div>
-                      
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600">Stock compté</p>
-                        {editingItem === item.id ? (
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              min="0"
-                              className="w-20 text-center"
-                              autoFocus
-                              defaultValue={item.counted_quantity || 0}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  const value = parseInt((e.target as HTMLInputElement).value);
-                                  handleUpdateCount(item.id, value || 0);
-                                }
-                              }}
-                            />
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                const input = document.querySelector(`input[type="number"]`) as HTMLInputElement;
-                                const value = parseInt(input.value);
-                                handleUpdateCount(item.id, value || 0);
-                              }}
-                            >
-                              <Save className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <p className="text-xl font-bold text-blue-600">
-                              {item.counted_quantity !== null ? item.counted_quantity : '-'}
-                            </p>
-                            {canEditInventory && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setEditingItem(item.id)}
-                                disabled={isUpdating}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {!canEditInventory && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-blue-600"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600">Différence</p>
-                        {item.counted_quantity !== null && getDifferenceBadge(item.difference || 0)}
-                      </div>
-                      
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600">Statut</p>
-                        {getStatusBadge(item)}
-                      </div>
-                      
-                      {item.counted_quantity !== null && (item.difference || 0) !== 0 && !item.is_adjusted && canAdjustStock && (
-                        <Button
-                          onClick={() => handleAdjustStock(item.id)}
-                          className="bg-orange-600 hover:bg-orange-700"
-                          disabled={isAdjusting}
-                        >
-                          Ajuster stock
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Historique des inventaires */}
-      {!activeSession && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {userRole === 'admin' ? 'Historique des inventaires' :
-               userRole === 'manager' ? 'Vos inventaires précédents' :
-               'Historique des inventaires'}
-            </CardTitle>
-            <p className="text-sm text-gray-600">
-              {userRole === 'admin' ? 'Toutes les sessions d\'inventaire' :
-               userRole === 'manager' ? 'Sessions d\'inventaire de votre magasin' :
-               'Sessions d\'inventaire consultables'}
-            </p>
-          </CardHeader>
-          <CardContent>
-            {inventorySessions.length === 0 ? (
-              <EmptyState
-                icon={Package}
-                title="Aucun inventaire"
-                description={messages.emptyStateMessage}
-                action={
-                  canCreateInventory
-                    ? {
-                        label: 'Démarrer un inventaire',
-                        onClick: () => setViewMode('session'),
-                        icon: Plus
-                      }
-                    : undefined
-                }
-              />
-            ) : (
-              <div className="space-y-4">
-                {inventorySessions.map((session) => (
-                  <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium text-gray-900">{session.name}</h4>
-                      <p className="text-sm text-gray-600">
-                        {session.stores?.name} • {new Date(session.created_at).toLocaleDateString('fr-FR')}
-                        {session.created_by_profile && ` • Par ${session.created_by_profile.name}`}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge className={
-                        session.status === 'completed' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }>
-                        {session.status === 'completed' ? 'Terminé' : 'Actif'}
-                      </Badge>
-                      {session.status === 'active' && canEditInventory && (
-                        <Button
-                          size="sm"
-                          onClick={() => setViewMode('session')}
-                        >
-                          Reprendre
-                        </Button>
-                      )}
-                      {canViewMetrics && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => exportInventoryReport(session.id, 'csv')}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-6 border-t">
+              <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+                Annuler
+              </Button>
+              <LoadingButton
+                type="submit"
+                loading={isSubmitting}
+                disabled={!isValid || !isDirty || isSubmitting || !canModifyUser}
+                className="min-w-[120px]"
+              >
+                {user ? 'Modifier' : 'Créer'}
+              </LoadingButton>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }; 
