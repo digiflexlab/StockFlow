@@ -56,8 +56,8 @@ export const SupportChat = ({ user, isOpen, onClose }: SupportChatProps) => {
     };
 
     return {
-      role: roleLabels[user.role] || user.role,
-      features: availableFeatures[user.role] || []
+      role: roleLabels[user?.role] || user?.role,
+      features: availableFeatures[user?.role] || []
     };
   };
 
@@ -83,7 +83,7 @@ export const SupportChat = ({ user, isOpen, onClose }: SupportChatProps) => {
     }
 
     if (lowerMessage.includes('utilisateur') || lowerMessage.includes('user')) {
-      if (user.role === 'admin') {
+      if (user?.role === 'admin') {
         return `En tant qu'administrateur, vous pouvez gérer les utilisateurs via le menu "Utilisateurs". Vous pouvez créer, modifier et supprimer des comptes utilisateurs.`;
       } else {
         return `La gestion des utilisateurs est réservée aux administrateurs. Vous êtes connecté en tant que ${context.role}.`;
@@ -99,7 +99,7 @@ export const SupportChat = ({ user, isOpen, onClose }: SupportChatProps) => {
     }
 
     // Réponse générale avec contexte
-    return `Bonjour ${user.name} ! En tant que ${context.role}, vous avez accès aux fonctionnalités suivantes : ${context.features.join(', ')}. Comment puis-je vous aider avec l'une de ces fonctionnalités ?`;
+    return `Bonjour ${user?.name || ''} ! En tant que ${context.role}, vous avez accès aux fonctionnalités suivantes : ${context.features.join(', ')}. Comment puis-je vous aider avec l'une de ces fonctionnalités ?`;
   };
 
   const handleSendMessage = () => {
