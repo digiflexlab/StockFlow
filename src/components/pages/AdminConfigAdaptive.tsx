@@ -198,7 +198,7 @@ export const AdminConfigAdaptive: React.FC = () => {
     const user = users.find(u => u.id === userId);
     if (!user) return;
 
-    const validationError = validateRoleChange(user.role, newRole);
+    const validationError = validateRoleChange(user?.role, newRole);
     if (validationError) {
       alert(validationError);
       return;
@@ -502,7 +502,7 @@ export const AdminConfigAdaptive: React.FC = () => {
                     <option value="">Choisir un utilisateur...</option>
                     {users.map((user: any) => (
                       <option key={user.id} value={user.id}>
-                        {user.name} ({user.email}) - {getRoleLabel(user.role)}
+                        {user?.name} ({user?.email}) - {getRoleLabel(user?.role)}
                       </option>
                     ))}
                   </select>
@@ -555,22 +555,22 @@ export const AdminConfigAdaptive: React.FC = () => {
                 <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div>
-                      <div className="font-medium">{user.name}</div>
-                      <div className="text-sm text-gray-600">{user.email}</div>
+                      <div className="font-medium">{user?.name}</div>
+                      <div className="text-sm text-gray-600">{user?.email}</div>
                       <div className="text-xs text-gray-500">
-                        Créé le {new Date(user.created_at).toLocaleDateString('fr-FR')}
+                        Créé le {new Date(user?.created_at).toLocaleDateString('fr-FR')}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <StatusBadge type="role" value={getRoleLabel(user.role)} />
-                      <Badge variant={user.is_active ? "default" : "secondary"}>
-                        {user.is_active ? 'Actif' : 'Inactif'}
+                      <StatusBadge type="role" value={getRoleLabel(user?.role)} />
+                      <Badge variant={user?.is_active ? "default" : "secondary"}>
+                        {user?.is_active ? 'Actif' : 'Inactif'}
                       </Badge>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <FilterSelect
-                      value={user.role}
+                      value={user?.role}
                       onChange={(value) => handleUserRoleChange(user.id, value)}
                       options={[
                         { value: USER_ROLES.ADMIN, label: 'Admin' },
@@ -581,7 +581,7 @@ export const AdminConfigAdaptive: React.FC = () => {
                       className="text-xs px-2 py-1"
                     />
                     <Switch
-                      checked={user.is_active}
+                      checked={user?.is_active}
                       onCheckedChange={(checked) => updateUserStatus(user.id, checked)}
                     />
                   </div>
