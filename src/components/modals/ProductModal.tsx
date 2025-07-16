@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { FormField } from '@/components/forms/FormField';
 import { FormActions } from '@/components/forms/FormActions';
 import { useFormValidation } from '@/hooks/useFormValidation';
@@ -156,6 +156,9 @@ export const ProductModal = ({ isOpen, onClose, product }: ProductModalProps) =>
           <DialogTitle>
             {product ? 'Modifier le produit' : 'Nouveau produit'}
           </DialogTitle>
+          <DialogDescription>
+            Saisissez les informations du produit, son prix, sa catégorie et son fournisseur.
+          </DialogDescription>
         </DialogHeader>
         {globalServerError && (
           <div className="mb-4 text-red-600" role="alert" aria-live="assertive">{globalServerError}</div>
