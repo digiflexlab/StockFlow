@@ -67,7 +67,7 @@ export const UserModal = ({ isOpen, onClose, onSave, user, stores }: UserModalPr
       newErrors.storeIds = 'Sélectionnez au moins un magasin';
     }
 
-    Object.entries(newErrors).forEach(([field, message]) => {
+    Object.entries(newErrors ?? {}).forEach(([field, message]) => {
       setError(field as keyof User, message);
     });
 
