@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { FormField } from '@/components/forms/FormField';
 import { FormActions } from '@/components/forms/FormActions';
 import { useFormValidation } from '@/hooks/useFormValidation';
@@ -111,6 +111,9 @@ export const StoreModal = ({ isOpen, onClose, store }: StoreModalProps) => {
           <DialogTitle>
             {store ? 'Modifier le magasin' : 'Nouveau magasin'}
           </DialogTitle>
+          <DialogDescription>
+            Saisissez les informations du magasin (nom, adresse, téléphone, email).
+          </DialogDescription>
         </DialogHeader>
         {serverError && (
           <div className="mb-4 text-red-600" role="alert" aria-live="assertive">{serverError}</div>
