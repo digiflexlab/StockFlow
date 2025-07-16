@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -418,6 +418,9 @@ export const PurchaseOrderModal = ({ isOpen, onClose, onSuccess }: PurchaseOrder
             <ShoppingCart className="h-5 w-5" />
             Nouvelle Commande d'Achat
           </DialogTitle>
+          <DialogDescription>
+            Créez une commande d'achat en sélectionnant les articles, les magasins d'allocation et en renseignant les informations de livraison.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
