@@ -11,6 +11,7 @@ interface Profile {
   role: 'admin' | 'manager' | 'seller';
   store_ids: number[];
   permissions: string[];
+  status?: string;
 }
 
 interface AuthContextType {
@@ -34,7 +35,7 @@ export const useAuth = () => {
   return context;
 };
 
-export function usePendingValidation(profile: any) {
+export function usePendingValidation(profile: Profile | null | undefined) {
   return profile && profile.status && profile.status !== 'active';
 }
 
@@ -128,8 +129,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       return { error };
-    } catch (error: any) {
+    } catch (error: unknown) {
       const authError = { message: 'Une erreur inattendue est survenue' };
+      if (error && typeof error === 'object' && 'message' in error) {
+        // @ts-expect-error: on force le typage pour accéder à error.message
+        authError.message = error.message;
+      }
       toast({
         title: "Erreur",
         description: authError.message,
@@ -168,8 +173,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       return { error };
-    } catch (error: any) {
+    } catch (error: unknown) {
       const authError = { message: 'Une erreur inattendue est survenue' };
+      if (error && typeof error === 'object' && 'message' in error) {
+        // @ts-expect-error: on force le typage pour accéder à error.message
+        authError.message = error.message;
+      }
       toast({
         title: "Erreur",
         description: authError.message,
@@ -222,10 +231,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         title: "Profil mis à jour",
         description: "Vos informations ont été mises à jour avec succès.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = { message: 'Une erreur est survenue lors de la mise à jour.' };
+      if (error && typeof error === 'object' && 'message' in error) {
+        // @ts-expect-error: on force le typage pour accéder à error.message
+        authError.message = error.message;
+      }
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la mise à jour.",
+        description: authError.message,
         variant: "destructive",
       });
     }
