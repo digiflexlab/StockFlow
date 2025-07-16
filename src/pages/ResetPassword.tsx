@@ -17,10 +17,23 @@ const ResetPassword = () => {
   const passwordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Vérifie si on est bien dans le contexte de reset password
-    const params = new URLSearchParams(location.search);
-    const type = params.get('type');
-    if (type === 'recovery') {
+    // Récupère d'abord dans la query string, sinon dans le hash
+    let params = new URLSearchParams(location.search);
+    let type = params.get('type');
+    let access_token = params.get('access_token');
+    let refresh_token = params.get('refresh_token');
+
+    if (!type) {
+      // Si pas dans la query, essaie dans le hash
+      if (window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        type = hashParams.get('type');
+        access_token = hashParams.get('access_token');
+        refresh_token = hashParams.get('refresh_token');
+      }
+    }
+
+    if (type === 'recovery' && access_token && refresh_token) {
       setStatus('form');
     } else {
       setStatus('error');
