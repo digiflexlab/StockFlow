@@ -323,7 +323,7 @@ export const Dashboard = ({ user, onPageChange }) => {
       seller: 'Vendeur'
     };
     
-    return `Bonjour ${user?.name ? user.name.split(' ')[0] : ''} ! 👋 (${roleLabels[user?.role]})`;
+    return `Bonjour ${(user?.name ?? '').split(' ')[0]} ! 👋 (${roleLabels[user?.role]})`;
   };
 
   // Obtenir la description selon le rôle
