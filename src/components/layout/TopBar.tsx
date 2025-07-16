@@ -62,12 +62,12 @@ export const TopBar = ({ user, onLogout }) => {
             <Button variant="ghost" className="flex items-center gap-3 p-2">
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-blue-600 text-white text-sm">
-                  {getInitials(user.name)}
+                  {getInitials(user?.name)}
                 </AvatarFallback>
               </Avatar>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium">{user.name}</p>
-                <p className="text-xs text-gray-500">{getRoleLabel(user.role)}</p>
+                <p className="text-sm font-medium">{user?.name}</p>
+                <p className="text-xs text-gray-500">{getRoleLabel(user?.role)}</p>
               </div>
             </Button>
           </DropdownMenuTrigger>
