@@ -175,13 +175,11 @@ export const Dashboard = ({ user, onPageChange }) => {
       const today = new Date().toISOString().split('T')[0];
       
       if (user.role === 'admin') {
-        // Pour l'admin, compter les utilisateurs connectés aujourd'hui
-        // Note: Cette logique peut être adaptée selon votre table de sessions
+        // Pour l'admin, compter les utilisateurs créés aujourd'hui (à défaut de last_sign_in_at)
         const { data: activeUsers } = await supabase
           .from('profiles')
           .select('id')
-          .gte('last_sign_in_at', today);
-        
+          .gte('created_at', today);
         return activeUsers?.length || 1; // Au moins l'admin lui-même
       } else {
         // Pour les autres rôles, retourner 1 (eux-mêmes)
