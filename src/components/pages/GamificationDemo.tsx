@@ -113,7 +113,7 @@ export const GamificationDemo = () => {
           await applyNoSalesPenalty(profile.id);
           break;
         case 'manager_badge':
-          if (profile.role === 'manager') {
+          if (profile?.role === 'manager') {
             await checkAndAwardManagerBadges(profile.id, 'manager');
           }
           break;
