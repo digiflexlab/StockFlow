@@ -130,7 +130,7 @@ const getMenuItems = (userRole) => {
 };
 
 export const AppSidebar = ({ user, currentPage, onPageChange }) => {
-  const menuItems = getMenuItems(user.role);
+  const menuItems = getMenuItems(user?.role);
   
   const getInitials = (name) => {
     return name.split(' ').map(n => n[0]).join('');
@@ -193,12 +193,12 @@ export const AppSidebar = ({ user, currentPage, onPageChange }) => {
         <div className="flex items-center gap-3 p-4">
           <Avatar className="h-10 w-10">
             <AvatarFallback className="bg-blue-600 text-white">
-              {getInitials(user.name)}
+              {getInitials(user?.name)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-            <p className="text-xs text-gray-500">{getRoleLabel(user.role)}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
+            <p className="text-xs text-gray-500">{getRoleLabel(user?.role)}</p>
           </div>
         </div>
       </SidebarFooter>
