@@ -223,7 +223,7 @@ export const UserModalEnhanced = ({
   const permissionsByCategory = useMemo(() => {
     const result: Record<string, { permissions: string[], selected: string[] }> = {};
     
-    Object.entries(PERMISSION_CATEGORIES).forEach(([category, permissions]) => {
+    Object.entries(PERMISSION_CATEGORIES ?? {}).forEach(([category, permissions]) => {
       const availableInCategory = permissions.filter(p => availablePermissions.includes(p));
       const selectedInCategory = data.permissions.filter(p => availableInCategory.includes(p));
       
@@ -482,7 +482,7 @@ export const UserModalEnhanced = ({
                 </Alert>
 
                 <div className="space-y-4">
-                  {Object.entries(permissionsByCategory).map(([category, { permissions, selected }]) => (
+                  {Object.entries(permissionsByCategory ?? {}).map(([category, { permissions, selected }]) => (
                     <Card key={category}>
                       <CardHeader>
                         <CardTitle className="text-lg">{category}</CardTitle>
