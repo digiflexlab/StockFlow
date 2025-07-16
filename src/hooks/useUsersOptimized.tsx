@@ -494,7 +494,7 @@ export const useUsersOptimized = () => {
   }, []);
 
   const getInitials = useCallback((name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    return (name ?? '').split(' ').map(n => n[0]).join('').toUpperCase();
   }, []);
 
   // Rôles disponibles
