@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -109,6 +109,9 @@ export const UserModal = ({ isOpen, onClose, onSave, user, stores }: UserModalPr
           <DialogTitle>
             {user ? 'Modifier l\'utilisateur' : 'Ajouter un utilisateur'}
           </DialogTitle>
+          <DialogDescription>
+            Saisissez les informations de l'utilisateur et attribuez-lui un ou plusieurs magasins.
+          </DialogDescription>
         </DialogHeader>
         {serverError && (
           <div className="mb-4 text-red-600" role="alert" aria-live="assertive">{serverError}</div>
