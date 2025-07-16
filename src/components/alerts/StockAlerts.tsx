@@ -42,7 +42,7 @@ export const StockAlerts = ({ products, stores, userRole, userStoreIds, onDismis
       products.forEach(product => {
         const minStock = product.minStock || 5; // Seuil par défaut
         
-        Object.entries(product.stock).forEach(([storeId, stock]) => {
+        Object.entries(product.stock ?? {}).forEach(([storeId, stock]) => {
           const store = stores.find(s => s.id === storeId);
           
           // Filtrer selon les permissions de l'utilisateur
