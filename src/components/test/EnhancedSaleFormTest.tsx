@@ -172,7 +172,7 @@ export const EnhancedSaleFormTest = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(demoScenarios).map(([key, scenario]) => (
+            {Object.entries(demoScenarios ?? {}).map(([key, scenario]) => (
               <Card key={key} className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="space-y-2">
