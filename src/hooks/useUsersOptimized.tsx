@@ -298,7 +298,7 @@ export const useUsersOptimized = () => {
         users.slice(0, 5).forEach(user => {
           activity.push({
             userId: user.id,
-            userName: user.name,
+            userName: user?.name,
             action: 'Connexion',
             timestamp: new Date().toISOString(),
             details: { ip: '192.168.1.1', device: 'Chrome' }
@@ -467,9 +467,9 @@ export const useUsersOptimized = () => {
     if (!users) return [];
     
     return users.filter(user => {
-      const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           user.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = selectedRole === 'all' || user.role === selectedRole;
+      const matchesSearch = user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = selectedRole === 'all' || user?.role === selectedRole;
       return matchesSearch && matchesRole;
     });
   }, [users, searchTerm, selectedRole]);
