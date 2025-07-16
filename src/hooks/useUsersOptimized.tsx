@@ -13,7 +13,7 @@ interface User {
   role: 'admin' | 'manager' | 'seller';
   store_ids: number[];
   permissions: string[];
-  is_active: boolean;
+  is_active?: boolean;
   last_login?: string;
   created_at: string;
   updated_at: string;
@@ -39,7 +39,7 @@ interface UserActivity {
   userName: string;
   action: string;
   timestamp: string;
-  details: any;
+  details: Record<string, unknown>;
 }
 
 interface UsersContext {
@@ -230,7 +230,7 @@ export const useUsersOptimized = () => {
       if (!canViewAllUsers) {
         if (canViewTeamUsers) {
           // Managers voient leur équipe (utilisateurs des magasins assignés)
-          usersQuery = usersQuery.in('store_ids', context.storeIds);
+          usersQuery = usersQuery.contains('store_ids', context.storeIds);
         } else if (canViewOwnProfile) {
           // Sellers voient seulement leur profil
           usersQuery = usersQuery.eq('id', profile?.id);
@@ -244,7 +244,7 @@ export const useUsersOptimized = () => {
 
       // Filtrage par magasin
       if (selectedStore !== 'all') {
-        usersQuery = usersQuery.contains('store_ids', [parseInt(selectedStore)]);
+        usersQuery = usersQuery.contains('store_ids', [parseInt(selectedStore)] as number[]);
       }
 
       const { data: usersData, error: usersError } = await usersQuery;
@@ -270,7 +270,7 @@ export const useUsersOptimized = () => {
       // Filtrage selon les permissions
       if (!canViewAllUsers) {
         if (canViewTeamUsers) {
-          statsQuery = statsQuery.in('store_ids', context.storeIds);
+          statsQuery = statsQuery.contains('store_ids', context.storeIds);
         } else if (canViewOwnProfile) {
           statsQuery = statsQuery.eq('id', profile?.id);
         }
