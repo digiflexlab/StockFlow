@@ -302,7 +302,7 @@ export const useAdminConfigOptimized = (): UseAdminConfigOptimizedReturn => {
       const user = users.find(u => u.id === userId);
       if (!user) throw new Error('Utilisateur introuvable');
 
-      const validationError = validateRoleChange(user.role, newRole);
+      const validationError = validateRoleChange(user?.role, newRole);
       if (validationError) throw new Error(validationError);
 
       const { error } = await supabase
