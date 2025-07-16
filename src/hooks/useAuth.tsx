@@ -34,6 +34,10 @@ export const useAuth = () => {
   return context;
 };
 
+export function usePendingValidation(profile: any) {
+  return profile && profile.status && profile.status !== 'active';
+}
+
 interface AuthProviderProps {
   children: ReactNode;
 }
