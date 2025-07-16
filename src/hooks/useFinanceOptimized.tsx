@@ -327,7 +327,7 @@ export const useFinanceOptimized = () => {
         return acc;
       }, {} as Record<string, number>);
 
-      const expensesByCategoryArray = Object.entries(expensesByCategory).map(([category, amount]) => ({
+      const expensesByCategoryArray = Object.entries(expensesByCategory ?? {}).map(([category, amount]) => ({
         category,
         amount,
         percentage: currentExpenses > 0 ? (amount / currentExpenses) * 100 : 0
