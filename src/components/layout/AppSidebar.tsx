@@ -133,7 +133,7 @@ export const AppSidebar = ({ user, currentPage, onPageChange }) => {
   const menuItems = getMenuItems(user?.role);
   
   const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('');
+    return (name ?? '').split(' ').map(n => n[0]).join('');
   };
 
   const getRoleLabel = (role) => {
