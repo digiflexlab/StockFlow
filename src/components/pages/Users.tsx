@@ -24,8 +24,9 @@ import {
   UserMinus,
   Clock,
   Calendar,
-  Building2
+  Building2,
 } from 'lucide-react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { UserModal } from '@/components/modals/UserModal';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -165,6 +166,7 @@ export const Users = ({ user }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pendingRole, setPendingRole] = useState({});
 
   // Messages adaptatifs
   const messages = useMemo(() => getRoleBasedMessages(profile?.role || 'seller'), [profile?.role]);
@@ -349,6 +351,34 @@ export const Users = ({ user }) => {
     };
   }, [users]);
 
+  const handleValidateUser = async (userId, role) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'active', role })
+        .eq('id', userId);
+      if (error) throw error;
+      toast({ title: 'Utilisateur validé', description: `Le compte a été activé avec le rôle ${getRoleLabel(role)}.` });
+      await loadUsers();
+    } catch (error) {
+      toast({ title: 'Erreur', description: 'Impossible de valider cet utilisateur.', variant: 'destructive' });
+    }
+  };
+  const handleRejectUser = async (userId) => {
+    if (!confirm('Voulez-vous vraiment rejeter cette inscription ?')) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+      if (error) throw error;
+      toast({ title: 'Inscription rejetée', description: 'Le compte a été supprimé.' });
+      await loadUsers();
+    } catch (error) {
+      toast({ title: 'Erreur', description: 'Impossible de supprimer ce compte.', variant: 'destructive' });
+    }
+  };
+
   // Vérification des permissions
   if (!canViewUsers) {
     return <AccessDenied message={messages.noAccessMessage} />;
@@ -356,16 +386,12 @@ export const Users = ({ user }) => {
 
   // État de chargement
   if (isLoading) {
-    return <LoadingSpinner message="Chargement des utilisateurs..." />;
+    return <LoadingSpinner text="Chargement des utilisateurs..." />;
   }
 
   // État d'erreur
   if (error) {
-    return <ErrorState 
-      title="Erreur de chargement"
-      description={error}
-      onRetry={loadUsers}
-    />;
+    return <ErrorState title="Erreur de chargement" description={error} onRetry={loadUsers} />;
   }
 
   // Données non disponibles
@@ -514,6 +540,39 @@ export const Users = ({ user }) => {
 
       {/* Liste des utilisateurs */}
       <div className="grid grid-cols-1 gap-4">
+        {/* Affichage des utilisateurs en attente (status === 'pending') */}
+        {isAdmin && users.some(u => u.status === 'pending') && (
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-yellow-700 mb-2 flex items-center gap-2"><Clock className="h-5 w-5" /> Inscriptions en attente</h3>
+            <div className="space-y-2">
+              {users.filter(u => u.status === 'pending').map(u => (
+                <Card key={u.id} className="border-yellow-400">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-gray-900">{u.name}</div>
+                      <div className="text-sm text-gray-600">{u.email}</div>
+                      <div className="text-xs text-gray-500">Inscrit le {new Date(u.created_at).toLocaleDateString('fr-FR')}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Select value={pendingRole[u.id] || ''} onValueChange={val => setPendingRole(r => ({ ...r, [u.id]: val }))}>
+                        <SelectTrigger className="w-36">
+                          <SelectValue placeholder="Choisir un rôle" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="seller">Vendeur</SelectItem>
+                          <SelectItem value="manager">Gérant</SelectItem>
+                          <SelectItem value="admin">Administrateur</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button size="sm" variant="default" disabled={!pendingRole[u.id]} onClick={() => handleValidateUser(u.id, pendingRole[u.id])}>Valider</Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleRejectUser(u.id)}>Rejeter</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
         {filteredUsers.map((u) => (
           <Card key={u.id}>
             <CardContent className="p-6">
