@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { FormField } from '@/components/forms/FormField';
 import { FormActions } from '@/components/forms/FormActions';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -228,6 +228,9 @@ export const ProductModalEnhanced = ({ isOpen, onClose, product }: ProductModalE
             <Search className="h-5 w-5" />
             {product ? 'Modifier le produit' : 'Nouveau produit'}
           </DialogTitle>
+          <DialogDescription>
+            Saisissez les informations détaillées du produit, son prix, sa catégorie, son fournisseur et ses taxes.
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
