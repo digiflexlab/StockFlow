@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { FormField } from '@/components/forms/FormField';
 import { FormActions } from '@/components/forms/FormActions';
 import { useFormValidation } from '@/hooks/useFormValidation';
@@ -75,6 +75,9 @@ export const CategoryModal = ({ isOpen, onClose, category }: CategoryModalProps)
           <DialogTitle>
             {category ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
           </DialogTitle>
+          <DialogDescription>
+            Saisissez le nom et la description de la catégorie.
+          </DialogDescription>
         </DialogHeader>
         {serverError && (
           <div className="mb-4 text-red-600" role="alert" aria-live="assertive">{serverError}</div>
