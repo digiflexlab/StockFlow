@@ -161,6 +161,7 @@ export const Users = ({ user }) => {
   const [stores, setStores] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
+  const [selectedStore, setSelectedStore] = useState('all');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
