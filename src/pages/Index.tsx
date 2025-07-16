@@ -15,7 +15,7 @@ const Index = () => {
     );
   }
 
-  if (!user || !profile) {
+  if (!user || !profile || !profile.role || !profile.name) {
     return <AuthPage />;
   }
 
