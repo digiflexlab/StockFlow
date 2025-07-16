@@ -23,7 +23,9 @@ export const validateEmail = (email: string): boolean => {
 };
 
 export const validatePhone = (phone: string): boolean => {
-  const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,}$/;
+  // Ancienne regex : /^[\+]?[0-9\s\-\(\)]{8,}$/;
+  // Nouvelle regex sans échappements inutiles :
+  const phoneRegex = /^\+?[0-9\s\-()]{8,}$/;
   return phoneRegex.test(phone);
 };
 
