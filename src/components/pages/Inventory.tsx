@@ -682,7 +682,7 @@ export const Inventory = () => {
                       <h4 className="font-medium text-gray-900">{session.name}</h4>
                       <p className="text-sm text-gray-600">
                         {session.stores?.name} • {new Date(session.created_at).toLocaleDateString('fr-FR')}
-                        {session.created_by_profile && ` • Par ${session.created_by_profile.name}`}
+                        {session.created_by_profile && ` • Par ${session.created_by_profile?.name}`}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
