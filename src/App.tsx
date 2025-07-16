@@ -34,9 +34,7 @@ function PendingValidationPage() {
 }
 
 const App = () => {
-  const { profile } = useAuth();
-  const isPending = usePendingValidation(profile);
-
+  // Ne pas utiliser useAuth ou usePendingValidation ici !
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
