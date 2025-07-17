@@ -153,12 +153,21 @@ export const Inventory = () => {
       const storeName = stores.find(s => s.id.toString() === selectedStore)?.name || '';
       
       // Créer la session d'inventaire
+      const createdBy = user?.id || user?.user_id || null;
+      if (!createdBy) {
+        toast({
+          title: "Erreur utilisateur",
+          description: "Impossible de déterminer l'utilisateur pour la création de la session.",
+          variant: "destructive",
+        });
+        return;
+      }
       const { data: session, error: sessionError } = await supabase
         .from('inventory_sessions')
         .insert({
           name: `Inventaire - ${new Date().toLocaleDateString('fr-FR')}`,
           store_id: parseInt(selectedStore),
-          created_by: user.id,
+          created_by: createdBy,
           status: 'active'
         })
         .select()
