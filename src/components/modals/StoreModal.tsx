@@ -128,6 +128,7 @@ export const StoreModal = ({ isOpen, onClose, store }: StoreModalProps) => {
             placeholder="Nom du magasin"
             required
             disabled={isSubmitting}
+            autoComplete="organization"
           />
 
           <FormField
@@ -141,6 +142,7 @@ export const StoreModal = ({ isOpen, onClose, store }: StoreModalProps) => {
             required
             disabled={isSubmitting}
             rows={2}
+            autoComplete="street-address"
           />
 
           <FormField
@@ -152,6 +154,7 @@ export const StoreModal = ({ isOpen, onClose, store }: StoreModalProps) => {
             placeholder="+221 77 123 4567"
             required
             disabled={isSubmitting}
+            autoComplete="tel"
           />
 
           <FormField
@@ -164,6 +167,7 @@ export const StoreModal = ({ isOpen, onClose, store }: StoreModalProps) => {
             placeholder="email@magasin.com"
             required
             disabled={isSubmitting}
+            autoComplete="email"
           />
 
           <FormActions
