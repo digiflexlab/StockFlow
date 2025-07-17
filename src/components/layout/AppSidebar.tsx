@@ -130,6 +130,11 @@ const getMenuItems = (userRole) => {
 };
 
 export const AppSidebar = ({ user, currentPage, onPageChange }) => {
+  // Vérification de sécurité pour éviter les erreurs si user est undefined
+  if (!user) {
+    return null;
+  }
+  
   const menuItems = getMenuItems(user?.role);
   
   const getInitials = (name) => {
@@ -169,17 +174,15 @@ export const AppSidebar = ({ user, currentPage, onPageChange }) => {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
-                    asChild
                     isActive={currentPage === item.url}
                     className="h-12"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onPageChange(item.url);
+                    }}
                   >
-                    <button 
-                      onClick={() => onPageChange(item.url)}
-                      className="flex items-center gap-3 w-full"
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.title}</span>
-                    </button>
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
