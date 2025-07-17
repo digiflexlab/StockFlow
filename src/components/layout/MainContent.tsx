@@ -44,7 +44,7 @@ export const MainContent = ({ currentPage, user, onPageChange }) => {
       case 'backup':
         return <Backup />;
       case 'admin-config':
-        return <AdminConfig />;
+        return <AdminConfig onPageChange={onPageChange} />;
       default:
         return <Dashboard user={user} onPageChange={onPageChange} />;
     }
