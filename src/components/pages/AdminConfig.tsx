@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
-export const AdminConfig = () => {
+export const AdminConfig = ({ onPageChange }) => {
   const { profile } = useAuth();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
