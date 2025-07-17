@@ -332,6 +332,7 @@ export const UserModalEnhanced = ({
                       onChange={(e) => updateField('name', e.target.value)}
                       className={errors.name ? 'border-red-500' : ''}
                       placeholder="Nom et prénom"
+                      autoComplete="name"
                     />
                     {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
                   </div>
@@ -345,6 +346,7 @@ export const UserModalEnhanced = ({
                       onChange={(e) => updateField('email', e.target.value)}
                       className={errors.email ? 'border-red-500' : ''}
                       placeholder="email@exemple.com"
+                      autoComplete="email"
                     />
                     {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
                   </div>
