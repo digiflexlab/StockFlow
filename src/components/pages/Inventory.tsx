@@ -153,7 +153,13 @@ export const Inventory = () => {
       const storeName = stores.find(s => s.id.toString() === selectedStore)?.name || '';
       
       // Créer la session d'inventaire
-      const createdBy = user?.id || user?.user_id || null;
+      const createdBy = user?.id || null;
+      console.log('Valeur envoyée pour created_by:', createdBy);
+      toast({
+        title: 'Debug RLS',
+        description: `created_by envoyé: ${createdBy}`,
+        variant: 'default',
+      });
       if (!createdBy) {
         toast({
           title: "Erreur utilisateur",
