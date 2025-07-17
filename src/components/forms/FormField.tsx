@@ -22,6 +22,7 @@ interface FormFieldProps {
   step?: string;
   rows?: number;
   className?: string;
+  autoComplete?: string;
 }
 
 export const FormField = ({
@@ -39,7 +40,8 @@ export const FormField = ({
   max,
   step,
   rows = 3,
-  className
+  className,
+  autoComplete
 }: FormFieldProps) => {
   const hasError = !!error;
 
@@ -52,7 +54,7 @@ export const FormField = ({
       className: cn(hasError && 'border-red-500 focus:border-red-500', className),
       'aria-invalid': hasError,
       'aria-describedby': hasError ? `${id}-error` : undefined,
-      autoComplete: (props as any)?.autoComplete,
+      ...(autoComplete ? { autoComplete } : {}),
     };
 
     switch (type) {
