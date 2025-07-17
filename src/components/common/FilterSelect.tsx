@@ -4,6 +4,7 @@ interface FilterSelectProps {
   options: { value: string; label: string }[];
   placeholder?: string;
   className?: string;
+  name?: string;
 }
 
 export const FilterSelect = ({
@@ -11,10 +12,13 @@ export const FilterSelect = ({
   onChange,
   options,
   placeholder = "Sélectionner...",
-  className = ""
+  className = "",
+  name
 }: FilterSelectProps) => {
   return (
     <select
+      id={name || "filter-select"}
+      name={name || "filter-select"}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className={`px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
