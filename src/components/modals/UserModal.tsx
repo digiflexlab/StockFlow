@@ -125,6 +125,7 @@ export const UserModal = ({ isOpen, onClose, onSave, user, stores }: UserModalPr
               onChange={(e) => updateField('name', e.target.value)}
               className={errors.name ? 'border-red-500' : ''}
               ref={firstErrorRef}
+              autoComplete="name"
             />
             {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
           </div>
@@ -137,6 +138,7 @@ export const UserModal = ({ isOpen, onClose, onSave, user, stores }: UserModalPr
               value={formData.email}
               onChange={(e) => updateField('email', e.target.value)}
               className={errors.email ? 'border-red-500' : ''}
+              autoComplete="email"
             />
             {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
           </div>
