@@ -153,7 +153,7 @@ export const PurchaseOrderModal = ({ isOpen, onClose, onSuccess }: PurchaseOrder
   const filteredProducts = useMemo(() => {
     if (!productSearch) return [];
     
-    return products.filter(product => 
+    return (products ?? []).filter(product => 
       product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
       product.sku.toLowerCase().includes(productSearch.toLowerCase())
     ).slice(0, 10);
@@ -240,7 +240,7 @@ export const PurchaseOrderModal = ({ isOpen, onClose, onSuccess }: PurchaseOrder
         
         // Mettre à jour le nom du magasin si l'ID change
         if (field === 'store_id') {
-          const store = stores.find(s => s.id === value);
+          const store = stores?.find(s => s.id === value);
           updatedAllocations[allocationIndex].store_name = store?.name || '';
         }
         
@@ -395,17 +395,17 @@ export const PurchaseOrderModal = ({ isOpen, onClose, onSuccess }: PurchaseOrder
     }
   };
 
-  const supplierOptions = suppliers.map(sup => ({
+  const supplierOptions = (suppliers ?? []).map(sup => ({
     value: sup.id,
     label: sup.name
   }));
 
-  const categoryOptions = categories.map(cat => ({
+  const categoryOptions = (categories ?? []).map(cat => ({
     value: cat.id,
     label: cat.name
   }));
 
-  const storeOptions = stores.map(store => ({
+  const storeOptions = (stores ?? []).map(store => ({
     value: store.id,
     label: store.name
   }));
@@ -766,7 +766,7 @@ export const PurchaseOrderModal = ({ isOpen, onClose, onSuccess }: PurchaseOrder
                     <div>
                       <h4 className="font-medium mb-2">Informations de la Commande</h4>
                       <div className="space-y-2 text-sm">
-                        <div><strong>Fournisseur:</strong> {suppliers.find(s => s.id === data.supplier_id)?.name || 'Non sélectionné'}</div>
+                        <div><strong>Fournisseur:</strong> {suppliers?.find(s => s.id === data.supplier_id)?.name || 'Non sélectionné'}</div>
                         <div><strong>Date de commande:</strong> {data.order_date}</div>
                         <div><strong>Livraison prévue:</strong> {data.expected_delivery}</div>
                         <div><strong>Nombre d'articles:</strong> {data.items.length}</div>
@@ -807,7 +807,7 @@ export const PurchaseOrderModal = ({ isOpen, onClose, onSuccess }: PurchaseOrder
                   <div>
                     <h4 className="font-medium mb-2">Allocation par Magasin</h4>
                     <div className="space-y-2">
-                      {stores.map(store => {
+                      {stores && stores.map(store => {
                         const storeAllocations = data.items.flatMap(item =>
                           item.store_allocations
                             .filter(allocation => allocation.store_id === store.id)
