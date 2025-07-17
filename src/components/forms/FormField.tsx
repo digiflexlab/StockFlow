@@ -51,7 +51,8 @@ export const FormField = ({
       placeholder,
       className: cn(hasError && 'border-red-500 focus:border-red-500', className),
       'aria-invalid': hasError,
-      'aria-describedby': hasError ? `${id}-error` : undefined
+      'aria-describedby': hasError ? `${id}-error` : undefined,
+      autoComplete: (props as any)?.autoComplete,
     };
 
     switch (type) {
