@@ -174,12 +174,12 @@ export const AuthPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Connexion</TabsTrigger>
-              <TabsTrigger value="signup">Inscription</TabsTrigger>
-            </TabsList>
-            {!showReset && (
+          {!showReset ? (
+            <Tabs defaultValue="signin" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="signin">Connexion</TabsTrigger>
+                <TabsTrigger value="signup">Inscription</TabsTrigger>
+              </TabsList>
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4" noValidate>
                   {serverError && (
@@ -199,6 +199,7 @@ export const AuthPage = () => {
                       ref={emailRef}
                       aria-invalid={!!errors.email}
                       aria-describedby={errors.email ? 'signin-email-error' : undefined}
+                      autoComplete="email"
                     />
                     {errors.email && (
                       <div id="signin-email-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.email}</div>
@@ -245,138 +246,139 @@ export const AuthPage = () => {
                   </Button>
                 </form>
               </TabsContent>
-            )}
-            {showReset && (
-              <TabsContent value="signin">
-                <form onSubmit={handleResetPassword} className="space-y-4" noValidate>
-                  {resetSuccess ? (
-                    <div className="text-green-700 text-center font-semibold py-6">
-                      Un email de réinitialisation a été envoyé.<br />
-                      Vérifiez votre boîte de réception.
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="reset-email">Email</Label>
-                        <Input
-                          id="reset-email"
-                          name="reset-email"
-                          type="email"
-                          placeholder="votre@email.com"
-                          value={resetEmail}
-                          onChange={e => setResetEmail(e.target.value)}
-                          required
-                          disabled={isSubmitting}
-                          aria-invalid={!!resetError}
-                          aria-describedby={resetError ? 'reset-email-error' : undefined}
-                        />
-                        {resetError && (
-                          <div id="reset-email-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{resetError}</div>
-                        )}
+              <TabsContent value="signup">
+                {signUpSuccess ? (
+                  <div className="text-green-700 text-center font-semibold py-6">
+                    Inscription réussie !<br />
+                    Vérifiez votre email pour valider votre compte.
+                  </div>
+                ) : (
+                  <form onSubmit={handleSignUp} className="space-y-4" noValidate>
+                    {serverError && (
+                      <div role="alert" aria-live="assertive" className="text-red-600 text-sm mb-2">
+                        {serverError}
                       </div>
-                      <Button
-                        type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700"
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name">Nom complet</Label>
+                      <Input
+                        id="signup-name"
+                        name="name"
+                        type="text"
+                        placeholder="Votre nom complet"
+                        required
                         disabled={isSubmitting}
-                      >
-                        Envoyer le lien de réinitialisation
-                      </Button>
-                      <div className="text-center mt-2">
-                        <button type="button" className="text-xs text-gray-600 hover:underline" onClick={() => setShowReset(false)}>
-                          Retour à la connexion
+                        ref={nameRef}
+                        aria-invalid={!!errors.name}
+                        aria-describedby={errors.name ? 'signup-name-error' : undefined}
+                      />
+                      {errors.name && (
+                        <div id="signup-name-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.name}</div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <Input
+                        id="signup-email"
+                        name="email"
+                        type="email"
+                        placeholder="votre@email.com"
+                        required
+                        disabled={isSubmitting}
+                        ref={emailRef}
+                        aria-invalid={!!errors.email}
+                        aria-describedby={errors.email ? 'signup-email-error' : undefined}
+                        autoComplete="email"
+                      />
+                      {errors.email && (
+                        <div id="signup-email-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.email}</div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Mot de passe</Label>
+                      <div className="relative">
+                        <Input
+                          id="signup-password"
+                          name="password"
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          required
+                          minLength={8}
+                          disabled={isSubmitting}
+                          ref={passwordRef}
+                          aria-invalid={!!errors.password}
+                          aria-describedby={errors.password ? 'signup-password-error' : undefined}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500"
+                          tabIndex={-1}
+                          onClick={() => setShowPassword((v) => !v)}
+                        >
+                          {showPassword ? 'Masquer' : 'Afficher'}
                         </button>
                       </div>
-                    </>
-                  )}
-                </form>
-              </TabsContent>
-            )}
-            <TabsContent value="signup">
-              {signUpSuccess ? (
-                <div className="text-green-700 text-center font-semibold py-6">
-                  Inscription réussie !<br />
-                  Vérifiez votre email pour valider votre compte.
-                </div>
-              ) : (
-              <form onSubmit={handleSignUp} className="space-y-4" noValidate>
-                {serverError && (
-                  <div role="alert" aria-live="assertive" className="text-red-600 text-sm mb-2">
-                    {serverError}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Nom complet</Label>
-                  <Input
-                    id="signup-name"
-                    name="name"
-                    type="text"
-                    placeholder="Votre nom complet"
-                    required
-                    disabled={isSubmitting}
-                    ref={nameRef}
-                    aria-invalid={!!errors.name}
-                    aria-describedby={errors.name ? 'signup-name-error' : undefined}
-                  />
-                  {errors.name && (
-                    <div id="signup-name-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.name}</div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    name="email"
-                    type="email"
-                    placeholder="votre@email.com"
-                    required
-                    disabled={isSubmitting}
-                    ref={emailRef}
-                    aria-invalid={!!errors.email}
-                    aria-describedby={errors.email ? 'signup-email-error' : undefined}
-                  />
-                  {errors.email && (
-                    <div id="signup-email-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.email}</div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Mot de passe</Label>
-                  <div className="relative">
-                    <Input
-                      id="signup-password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      required
-                      minLength={8}
+                      {errors.password && (
+                        <div id="signup-password-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.password}</div>
+                      )}
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-green-600 hover:bg-green-700"
                       disabled={isSubmitting}
-                      ref={passwordRef}
-                      aria-invalid={!!errors.password}
-                      aria-describedby={errors.password ? 'signup-password-error' : undefined}
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500"
-                      tabIndex={-1}
-                      onClick={() => setShowPassword((v) => !v)}
                     >
-                      {showPassword ? 'Masquer' : 'Afficher'}
-                    </button>
+                      {isSubmitting ? 'Inscription...' : 'S\'inscrire'}
+                    </Button>
+                  </form>
+                )}
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <div className="w-full">
+              <form onSubmit={handleResetPassword} className="space-y-4" noValidate>
+                {resetSuccess ? (
+                  <div className="text-green-700 text-center font-semibold py-6">
+                    Un email de réinitialisation a été envoyé.<br />
+                    Vérifiez votre boîte de réception.
                   </div>
-                  {errors.password && (
-                    <div id="signup-password-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{errors.password}</div>
-                  )}
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Inscription...' : 'S\'inscrire'}
-                </Button>
+                ) : (
+                  <>
+                    <div className="text-xl font-bold mb-2">Réinitialiser le mot de passe</div>
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email">Email</Label>
+                      <Input
+                        id="reset-email"
+                        name="reset-email"
+                        type="email"
+                        placeholder="votre@email.com"
+                        value={resetEmail}
+                        onChange={e => setResetEmail(e.target.value)}
+                        required
+                        disabled={isSubmitting}
+                        aria-invalid={!!resetError}
+                        aria-describedby={resetError ? 'reset-email-error' : undefined}
+                      />
+                      {resetError && (
+                        <div id="reset-email-error" role="alert" aria-live="assertive" className="text-red-600 text-xs">{resetError}</div>
+                      )}
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      disabled={isSubmitting}
+                    >
+                      Envoyer le lien de réinitialisation
+                    </Button>
+                    <div className="text-center mt-2">
+                      <button type="button" className="text-xs text-gray-600 hover:underline" onClick={() => setShowReset(false)}>
+                        Retour à la connexion
+                      </button>
+                    </div>
+                  </>
+                )}
               </form>
-              )}
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
