@@ -122,6 +122,7 @@ export const SupplierModal = ({ isOpen, onClose, supplier }: SupplierModalProps)
             placeholder="Nom du fournisseur"
             required
             disabled={isSubmitting}
+            autoComplete="organization"
           />
 
           <FormField
@@ -132,6 +133,7 @@ export const SupplierModal = ({ isOpen, onClose, supplier }: SupplierModalProps)
             error={errors.contact_person}
             placeholder="Nom du contact"
             disabled={isSubmitting}
+            autoComplete="name"
           />
 
           <FormField
@@ -143,6 +145,7 @@ export const SupplierModal = ({ isOpen, onClose, supplier }: SupplierModalProps)
             error={errors.email}
             placeholder="email@exemple.com"
             disabled={isSubmitting}
+            autoComplete="email"
           />
 
           <FormField
@@ -153,6 +156,7 @@ export const SupplierModal = ({ isOpen, onClose, supplier }: SupplierModalProps)
             error={errors.phone}
             placeholder="+221 77 123 4567"
             disabled={isSubmitting}
+            autoComplete="tel"
           />
 
           <FormField
