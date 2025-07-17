@@ -621,6 +621,7 @@ export const EnhancedSaleForm = ({
                       value={customerInfo.name}
                       onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Nom du client"
+                      autoComplete="name"
                     />
                   </div>
 
@@ -632,6 +633,7 @@ export const EnhancedSaleForm = ({
                       value={customerInfo.email}
                       onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
                       placeholder="email@exemple.com"
+                      autoComplete="email"
                     />
                   </div>
 
@@ -642,6 +644,7 @@ export const EnhancedSaleForm = ({
                       value={customerInfo.phone}
                       onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
                       placeholder="01 23 45 67 89"
+                      autoComplete="tel"
                     />
                   </div>
                 </div>
