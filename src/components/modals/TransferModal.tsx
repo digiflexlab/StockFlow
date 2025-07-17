@@ -84,7 +84,7 @@ export const TransferModal = ({ isOpen, onClose, onSave }: TransferModalProps) =
 
   // Magasins disponibles selon les permissions
   const availableStores = useMemo(() => {
-    return stores.filter(store => {
+    return (stores ?? []).filter(store => {
       if (profile?.role === 'admin') return true;
       return profile?.store_ids?.includes(store.id);
     });
@@ -94,7 +94,7 @@ export const TransferModal = ({ isOpen, onClose, onSave }: TransferModalProps) =
   const filteredProducts = useMemo(() => {
     if (!productSearch || !transferData.source_store_id) return [];
     
-    return products.filter(product => 
+    return (products ?? []).filter(product => 
       product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
       product.sku?.toLowerCase().includes(productSearch.toLowerCase())
     ).slice(0, 10);
@@ -104,7 +104,7 @@ export const TransferModal = ({ isOpen, onClose, onSave }: TransferModalProps) =
   const sourceStock = useMemo(() => {
     if (!transferData.source_store_id) return [];
     
-    return stockData.filter(stock => 
+    return (stockData ?? []).filter(stock => 
       stock.store_id === transferData.source_store_id
     );
   }, [stockData, transferData.source_store_id]);
